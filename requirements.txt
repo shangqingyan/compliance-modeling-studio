@@ -1,0 +1,11 @@
+﻿fastapi
+uvicorn[standard]
+apscheduler
+python-multipart
+openpyxl
+pyyaml
+pandas
+scikit-learn
+scipy
+matplotlib
+joblib

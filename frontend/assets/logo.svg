@@ -1,0 +1,17 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="AI compliance modeling logo">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7c8cff"/>
+      <stop offset="1" stop-color="#a855f7"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="55%">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="128" height="128" rx="30" fill="url(#halo)"/>
+  <rect x="16" y="16" width="96" height="96" rx="26" fill="#0b1023" stroke="url(#g)" stroke-width="3"/>
+  <path d="M42 84 64 42l22 42H42Z" fill="none" stroke="url(#g)" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M52 72h24" stroke="#22d3ee" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="64" cy="42" r="7" fill="#e8ecff"/>
+</svg>

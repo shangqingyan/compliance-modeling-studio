@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Learner"
+  short_description: "Learn, model, and build safe skills from any goal"
+  default_prompt: "Use $skill-learner to learn and build a safe, reusable skill for my goal: [describe the goal]."

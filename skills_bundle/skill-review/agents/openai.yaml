@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Review"
+  short_description: "Periodically review, rank, prune, and pin Codex skills"
+  default_prompt: "Use $skill-review to audit my installed skills and rank which ones to keep, prune, or pin."

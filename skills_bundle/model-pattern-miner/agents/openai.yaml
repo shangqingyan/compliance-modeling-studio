@@ -1,0 +1,4 @@
+interface:
+  display_name: "Model Pattern Miner"
+  short_description: "Record and mine excellent-model patterns"
+  default_prompt: "Use $model-pattern-miner to register models, identify excellent models, mine reusable patterns, and recommend modeling approaches."

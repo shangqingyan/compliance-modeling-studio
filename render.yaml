@@ -1,0 +1,16 @@
+﻿services:
+  - type: web
+    name: compliance-modeling-api
+    runtime: docker
+    plan: starter
+    envVars:
+      - key: ACCESS_PASSWORD
+        sync: false
+      - key: DATA_DIR
+        value: /opt/data
+      - key: PYTHONUNBUFFERED
+        value: "1"
+    disk:
+      name: model-data
+      mountPath: /opt/data
+      sizeGB: 5

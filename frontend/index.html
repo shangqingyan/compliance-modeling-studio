@@ -1,0 +1,823 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>合规建模智能工作台</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <style>
+    :root {
+      --bg: #060913;
+      --bg-2: #0b1023;
+      --panel: rgba(18, 24, 48, 0.66);
+      --panel-strong: rgba(22, 29, 60, 0.86);
+      --border: rgba(139, 157, 255, 0.22);
+      --border-hot: rgba(139, 157, 255, 0.45);
+      --text: #e8ecff;
+      --muted: #9aa5d1;
+      --accent: #7c8cff;
+      --accent-2: #a855f7;
+      --cyan: #22d3ee;
+      --green: #34d399;
+      --amber: #fbbf24;
+      --red: #fb7185;
+      --shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Inter", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(124, 140, 255, 0.20), transparent 32%),
+        radial-gradient(circle at 85% 15%, rgba(168, 85, 247, 0.18), transparent 34%),
+        radial-gradient(circle at 55% 90%, rgba(34, 211, 238, 0.12), transparent 30%),
+        linear-gradient(135deg, #060913 0%, #0b1023 48%, #080d1c 100%);
+      background-attachment: fixed;
+    }
+    .shell { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+    aside {
+      padding: 26px 18px;
+      background: rgba(8, 12, 28, 0.72);
+      border-right: 1px solid var(--border);
+      backdrop-filter: blur(18px);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+    .brand { display: flex; gap: 12px; align-items: center; margin-bottom: 30px; }
+    .logo {
+      width: 44px; height: 44px; border-radius: 14px;
+      display: grid; place-items: center;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 0 24px rgba(124, 140, 255, 0.55);
+      font-weight: 800; font-size: 20px;
+    }
+    .brand h1 { font-size: 17px; margin: 0; line-height: 1.2; }
+    .brand p { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
+    nav button {
+      width: 100%; border: 0; background: transparent; color: var(--muted);
+      text-align: left; padding: 13px 14px; border-radius: 12px; margin: 4px 0;
+      cursor: pointer; font-size: 14px; transition: all .2s ease;
+      display: flex; align-items: center; gap: 10px;
+    }
+    nav button:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+    nav button.active {
+      color: white;
+      background: linear-gradient(135deg, rgba(124,140,255,0.20), rgba(168,85,247,0.16));
+      box-shadow: inset 0 0 0 1px var(--border-hot);
+    }
+    main { padding: 30px 34px 60px; min-width: 0; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+    .topbar h2 { margin: 0; font-size: 26px; letter-spacing: .5px; }
+    .status-pill { font-size: 12px; color: var(--muted); padding: 7px 12px; border: 1px solid var(--border); border-radius: 999px; background: rgba(255,255,255,0.04); }
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 18px; }
+    .card {
+      grid-column: span 12;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+    }
+    .card.half { grid-column: span 6; }
+    .card.third { grid-column: span 4; }
+    .card.full { grid-column: span 12; }
+    h3 { margin: 0 0 14px; font-size: 16px; }
+    label { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 6px; }
+    input, select, textarea {
+      width: 100%; padding: 11px 12px; border-radius: 12px; color: var(--text);
+      background: rgba(5, 8, 20, 0.72); border: 1px solid var(--border); outline: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,140,255,0.14); }
+    textarea { min-height: 90px; resize: vertical; }
+    .row { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; }
+    .row > * { flex: 1; min-width: 160px; }
+    button.btn {
+      border: 0; border-radius: 12px; padding: 11px 16px; cursor: pointer;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white; font-weight: 600; transition: transform .15s ease, filter .15s ease;
+    }
+    button.btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
+    button.btn.secondary { background: rgba(255,255,255,0.08); border: 1px solid var(--border); }
+    button.btn.danger { background: linear-gradient(135deg, #be123c, #f43f5e); }
+    button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .logbox {
+      background: #05070f; border: 1px solid var(--border); border-radius: 14px;
+      padding: 12px; height: 220px; overflow: auto; font: 12px/1.7 "JetBrains Mono", "Consolas", monospace;
+      white-space: pre-wrap; color: #cbd5ff;
+    }
+    .logbox .error { color: var(--red); }
+    .tag { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; font-size: 11px; border: 1px solid var(--border); color: var(--muted); }
+    .tag.pass, .tag.accepted { color: var(--green); border-color: rgba(52,211,153,.4); }
+    .tag.blocked, .tag.error { color: var(--red); border-color: rgba(251,113,133,.4); }
+    .tag.review, .tag.remediate { color: var(--amber); border-color: rgba(251,191,36,.4); }
+    .tag.modeling, .tag.diagnosing, .tag.compliance, .tag.pending { color: var(--cyan); border-color: rgba(34,211,238,.4); }
+    .chart { width: 100%; height: 540px; }
+    .tablewrap { overflow: auto; border: 1px solid var(--border); border-radius: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { padding: 10px; border-bottom: 1px solid rgba(139,157,255,.12); text-align: left; }
+    th { color: var(--muted); font-weight: 600; background: rgba(255,255,255,0.03); }
+    .skill-list { display: grid; gap: 10px; }
+    .skill-item { padding: 12px; border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,0.03); }
+    .skill-item h4 { margin: 0 0 6px; font-size: 14px; }
+    .skill-item p { margin: 0; color: var(--muted); font-size: 12px; }
+    .hidden { display: none !important; }
+    .stars { display: flex; gap: 6px; margin: 8px 0; }
+    .stars button { background: transparent; border: 0; color: #64748b; font-size: 26px; cursor: pointer; }
+    .stars button.on { color: #facc15; }
+    .notice { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); font-size: 13px; margin: 10px 0; }
+    .notice.red { color: #ffd7dd; border-color: rgba(251,113,133,.4); background: rgba(251,113,133,.08); }
+    .notice.green { color: #d1fae5; border-color: rgba(52,211,153,.4); background: rgba(52,211,153,.08); }
+    @media (max-width: 900px) {
+      .shell { grid-template-columns: 1fr; }
+      aside { position: relative; height: auto; border-right: 0; border-bottom: 1px solid var(--border); }
+      nav { display: flex; flex-wrap: wrap; gap: 6px; }
+      nav button { width: auto; }
+      main { padding: 20px; }
+      .card.half, .card.third { grid-column: span 12; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <div class="brand">
+        <div class="logo">AI</div>
+        <div>
+          <h1>合规建模智能工作台</h1>
+          <p>Compliance Modeling Studio</p>
+        </div>
+      </div>
+      <nav id="nav">
+        <button data-tab="modeling" class="active">📊 数据建模</button>
+        <button data-tab="diagnosis">📈 诊断与可视化</button>
+        <button data-tab="feedback">💬 反馈重建</button>
+        <button data-tab="skills">🧠 技能迭代学习</button>
+        <button data-tab="review">⚖️ 技能权重评估</button>
+        <button data-tab="compliance">🛡️ 合规审计日志</button>
+      </nav>
+    </aside>
+    <main>
+      <div id="risk-banner" class="notice red hidden" style="margin-bottom:16px;"></div>
+      <div class="topbar">
+        <h2 id="page-title">数据建模</h2>
+        <div class="status-pill" id="health">连接中…</div>
+      </div>
+
+      <section id="tab-modeling" class="grid">
+        <div class="card full">
+          <h3>上传数据并启动建模</h3>
+          <div class="row">
+            <div>
+              <label>CSV / Excel / JSON 文件</label>
+              <input id="file-input" type="file" accept=".csv,.xlsx,.xls,.json" />
+            </div>
+            <div>
+              <label>目标列</label>
+              <select id="target-select"><option value="">请先上传文件</option></select>
+            </div>
+            <div>
+              <label>候选模型</label>
+              <input id="models-input" value="linear,ridge,lasso,decision_tree,random_forest,gradient_boosting,svr" />
+            </div>
+            <div>
+              <label>独热编码阈值</label>
+              <input id="cardinality-input" type="number" value="20" min="2" max="100" />
+            </div>
+            <div>
+              <label>Epochs（神经网络训练轮数）</label>
+              <input id="epochs-input" type="number" value="100" min="1" max="5000" step="1" />
+            </div>
+            <div>
+              <label>稳定性重复次数</label>
+              <select id="stability-runs-select">
+                <option value="30">30 次</option>
+                <option value="50" selected>50 次</option>
+                <option value="100">100 次</option>
+              </select>
+            </div>
+            <div>
+              <label>建模目标描述</label>
+              <input id="goal-input" value="" placeholder="例如：预测房价" />
+            </div>
+            <button id="start-job" class="btn" disabled>启动建模</button>
+          </div>
+          <div id="upload-notice"></div>
+        </div>
+        <div class="card full">
+          <h3>任务列表</h3>
+          <div class="tablewrap" style="max-height:360px;overflow:auto;"><table><thead><tr><th>任务ID</th><th>状态</th><th>目标列</th><th>轮次</th><th>最佳模型</th><th>创建时间</th><th>操作</th></tr></thead><tbody id="job-list"><tr><td colspan="7">加载中…</td></tr></tbody></table></div>
+        </div>
+        <div class="card full">
+          <h3>运行日志</h3>
+          <div class="logbox" id="job-log">等待任务…</div>
+        </div>
+      </section>
+
+      <section id="tab-diagnosis" class="grid hidden">
+        <div class="card full">
+          <h3>模型诊断与可视化</h3>
+          <div id="diag-summary" class="notice">暂无诊断结果，请先在“数据建模”中运行任务。</div>
+        </div>
+        <div class="card full"><h3>模型验证 R² 对比</h3><div id="chart-r2" class="chart"></div></div>
+        <div class="card full"><h3>预测 vs 实际</h3><div id="chart-scatter" class="chart"></div></div>
+        <div class="card full"><h3>R² 具体数据</h3><div class="tablewrap"><table id="r2-table"><thead><tr><th>模型</th><th>验证R²</th><th>测试R²</th><th>R²均值</th><th>R²标准差</th></tr></thead><tbody><tr><td colspan="5">暂无</td></tr></tbody></table></div></div>
+        <div class="card full"><h3>稳定性训练汇总</h3><div id="training-summary" class="logbox" style="height:150px;">暂无</div></div>
+        <div class="card full"><h3>残差诊断图</h3><img id="residual-image" alt="残差图" style="max-width:100%;border-radius:14px;" /><div id="residual-caption" class="notice hidden"></div></div>
+        <div class="card full"><h3>模型数学文档</h3><pre id="math-model" style="white-space:pre-wrap;background:#05070f;padding:16px;border-radius:14px;overflow:auto;">暂无</pre></div>
+      </section>
+
+      <section id="tab-feedback" class="grid hidden">
+        <div class="card full">
+          <h3>模型结果反馈</h3>
+          <p style="color:var(--muted);font-size:13px;">仅对已完成任务进行反馈。评分 ≤ 3 或勾选“重新建模”会创建新的重建任务。</p>
+          <div class="row">
+            <select id="feedback-job-select"><option value="">请选择任务</option></select>
+          </div>
+          <div id="feedback-panel" class="hidden">
+            <label>评分</label>
+            <div class="stars" id="stars">
+              <button data-v="1">★</button><button data-v="2">★</button><button data-v="3">★</button><button data-v="4">★</button><button data-v="5">★</button>
+            </div>
+            <label>文字反馈</label>
+            <textarea id="feedback-comment" placeholder="请描述模型结果的问题、期望或业务约束"></textarea>
+            <label><input id="feedback-rebuild" type="checkbox" /> 提交后立即重新建模</label>
+            <button id="submit-feedback" class="btn" style="margin-top:12px;">提交反馈</button>
+          </div>
+          <div id="feedback-result" class="notice hidden"></div>
+        </div>
+      </section>
+
+      <section id="tab-skills" class="grid hidden">
+        <div class="card full">
+          <h3>已安装技能</h3>
+          <div id="skills-list" class="skill-list">加载中…</div>
+        </div>
+        <div class="card full">
+          <h3>推荐学习的新技能</h3>
+          <div id="skill-recommendations" class="skill-list">加载中…</div>
+          <button id="refresh-recommendations" class="btn secondary" style="margin-top:10px;">刷新推荐并搜索</button>
+        </div>
+        <div class="card half">
+          <h3>查找新技能</h3>
+          <div class="row">
+            <input id="find-query" placeholder="例如：react performance" />
+            <button id="find-skill" class="btn">搜索</button>
+          </div>
+          <div id="find-result" class="logbox" style="height:180px;margin-top:12px;">暂无</div>
+        </div>
+        <div class="card half">
+          <h3>学习新技能（草稿）</h3>
+          <div class="row">
+            <input id="learn-name" placeholder="skill-name" />
+            <input id="learn-goal" placeholder="目标描述" />
+            <button id="learn-skill" class="btn">生成草稿</button>
+          </div>
+          <div id="learn-result" class="logbox" style="height:180px;margin-top:12px;">暂无</div>
+        </div>
+        <div class="card full">
+          <h3>草稿安装 / 删除</h3>
+          <div class="row">
+            <input id="skill-action-name" placeholder="技能ID" />
+            <button id="approve-install" class="btn">批准并安装草稿</button>
+            <button id="approve-delete" class="btn danger">批准并删除技能</button>
+          </div>
+          <div id="skill-action-result" class="notice hidden"></div>
+        </div>
+      </section>
+
+      <section id="tab-review" class="grid hidden">
+        <div class="card full">
+          <h3>技能权重评估</h3>
+          <button id="run-review" class="btn">立即执行 dry-run 评估</button>
+          <div id="review-result" class="logbox" style="height:220px;margin-top:12px;">暂无</div>
+        </div>
+        <div class="card full">
+          <h3>删除候选确认</h3>
+          <div id="deletion-candidates" class="notice">暂无推荐</div>
+          <input id="review-delete-ids" placeholder="逗号分隔技能ID，例如 skill-a,skill-b" />
+          <button id="apply-delete" class="btn danger" style="margin-top:8px;">批准并执行删除</button>
+          <div id="review-delete-result" class="notice hidden"></div>
+        </div>
+        <div class="card full">
+          <h3>评估报告</h3>
+          <div class="tablewrap"><table id="review-report-table"><thead><tr><th>技能</th><th>重要性</th><th>消融影响</th><th>累计权重</th><th>归一化权重</th><th>状态</th><th>置顶</th><th>建议</th></tr></thead><tbody><tr><td colspan="8">暂无</td></tr></tbody></table></div>
+        </div>
+      </section>
+
+      <section id="tab-compliance" class="grid hidden">
+        <div class="card full">
+          <h3>项目合规 + Sunny 监督</h3>
+          <button id="run-compliance" class="btn">立即运行合规审计</button>
+          <div id="compliance-latest" class="logbox" style="height:260px;margin-top:12px;">暂无</div>
+        </div>
+        <div class="card full">
+          <h3>审计结论卡片</h3>
+          <div id="compliance-card"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let uploadId = null;
+    let currentJobId = null;
+    let pollTimer = null;
+    let feedbackRating = 5;
+    let CLIENT_ID = localStorage.getItem('client_id');
+    if (!CLIENT_ID) {
+      CLIENT_ID = 'client-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem('client_id', CLIENT_ID);
+    }
+
+    function tag(status) {
+      return `<span class="tag ${status}">${status}</span>`;
+    }
+    function notice(id, text, cls) {
+      const el = $(id);
+      el.textContent = text;
+      el.className = `notice ${cls || ''}`;
+      el.classList.remove('hidden');
+    }
+
+    async function api(path, options = {}) {
+      const configuredBase = window.PUBLIC_API_BASE_URL || '';
+      let url = path;
+      if (configuredBase.startsWith('http')) {
+        url = configuredBase.replace(/\/$/, '') + path;
+      } else if (location.hostname.endsWith('netlify.app') || configuredBase.includes('netlify')) {
+        const proxyBase = configuredBase || '/.netlify/functions/api-proxy';
+        url = proxyBase + '?path=' + encodeURIComponent(path);
+      }
+      const res = await fetch(url, options);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.detail || data.error || res.statusText);
+      return data;
+    }
+
+    function switchTab(name) {
+      document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+      document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+      const map = { modeling: '数据建模', diagnosis: '诊断与可视化', feedback: '反馈重建', skills: '技能迭代学习', review: '技能权重评估', compliance: '合规审计日志' };
+      $(`tab-${name}`).classList.remove('hidden');
+      $('page-title').textContent = map[name] || '';
+    }
+    document.querySelectorAll('nav button').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+
+    async function refreshHealth() {
+      try {
+        const h = await api('/api/health');
+        $('health').textContent = `服务正常 · ${h.time}`;
+      } catch (e) {
+        $('health').textContent = '服务未连接';
+      }
+    }
+
+    async function refreshJobs() {
+      try {
+        const data = await api('/api/jobs');
+        const tbody = $('job-list');
+        if (!data.jobs.length) { tbody.innerHTML = '<tr><td colspan="7">暂无任务</td></tr>'; return; }
+        tbody.innerHTML = data.jobs.map(j => `<tr><td><a href="#" data-job="${j.job_id}" class="job-link">${j.job_id}</a></td><td>${tag(j.status)}</td><td>${j.target || '-'}</td><td>${j.iteration_count || 0}</td><td>${j.best_model || '-'}</td><td>${(j.created_at || '').replace('T',' ').slice(0,19)}</td><td><button class="btn secondary" data-delete="${j.job_id}">删除</button></td></tr>`).join('');
+        document.querySelectorAll('.job-link').forEach(a => a.addEventListener('click', (e) => { e.preventDefault(); openJob(a.dataset.job); }));
+        document.querySelectorAll('button[data-delete]').forEach(btn => btn.addEventListener('click', () => deleteJob(btn.dataset.delete)));
+      } catch (e) { console.error(e); }
+    }
+
+    async function deleteJob(jobId) {
+      if (!confirm(`确认删除任务 ${jobId}？`)) return;
+      try {
+        await api(`/api/jobs/${jobId}`, { method: 'DELETE' });
+        if (currentJobId === jobId) {
+          currentJobId = null;
+          clearInterval(pollTimer);
+          $('job-log').textContent = '任务已删除。';
+        }
+        await refreshJobs();
+      } catch (e) {
+        alert(`删除失败: ${e.message}`);
+      }
+    }
+
+    async function refreshSkills() {
+      try {
+        const data = await api('/api/skills');
+        const list = $('skills-list');
+        if (!data.skills.length) { list.textContent = '暂无技能'; return; }
+        list.innerHTML = data.skills.map(s => `<div class="skill-item"><h4>${s.id}</h4><p>${s.description || s.name || '无描述'}</p></div>`).join('');
+      } catch (e) { console.error(e); }
+    }
+
+    function clearDiagnosis() {
+      ['chart-r2', 'chart-scatter'].forEach(id => {
+        const el = $(id);
+        const chart = echarts && echarts.getInstanceByDom ? echarts.getInstanceByDom(el) : null;
+        if (chart) chart.clear();
+      });
+      $('diag-summary').textContent = '等待任务数据…';
+      $('diag-summary').className = 'notice';
+      $('residual-image').removeAttribute('src');
+      $('residual-image').style.display = 'none';
+      $('residual-caption').classList.add('hidden');
+      $('math-model').textContent = '暂无';
+      $('training-summary').textContent = '暂无';
+      renderR2Table([]);
+    }
+
+    async function openJob(jobId) {
+      currentJobId = jobId;
+      clearDiagnosis();
+      clearInterval(pollTimer);
+      pollTimer = setInterval(() => pollJob(jobId), 1200);
+      await pollJob(jobId);
+      switchTab('diagnosis');
+    }
+
+    async function pollJob(jobId) {
+      try {
+        const job = await api(`/api/jobs/${jobId}`);
+        $('job-log').innerHTML = (job.logs || []).map(l => `${l.time} [${l.level}] ${l.message}`).join('\n');
+        $('job-log').scrollTop = $('job-log').scrollHeight;
+        renderDiagnosis(job);
+        const stableDone = job.stability_status === 'done' && job.pattern_status === 'done';
+        if (job.status === 'blocked' || job.status === 'accepted' || (job.status === 'pass' && stableDone)) {
+          clearInterval(pollTimer);
+          refreshJobs();
+        }
+      } catch (e) {
+        $('job-log').textContent = `加载任务失败: ${e.message}`;
+        clearInterval(pollTimer);
+      }
+    }
+
+    function renderDiagnosis(job) {
+      const summary = $('diag-summary');
+      const r = (job.result && (job.result.latest_display || job.result)) || {};
+      const m = r.metrics || {};
+      const b = m.best_model || {};
+      summary.innerHTML = `状态 ${tag(job.status)} · 轮次 ${r.iteration || job.iteration_count || '-'} · 最佳模型 ${b.name || '-'} · 测试 R² ${b.test_r2 ?? '-'} · RMSE ${b.test_rmse ?? '-'} · MAE ${b.test_mae ?? '-'}`;
+      summary.className = 'notice ' + (job.status === 'pass' || job.status === 'accepted' ? 'green' : job.status === 'blocked' ? 'red' : '');
+      const comparison = m.model_comparison || [];
+      if (comparison.length && window.echarts) {
+        drawR2(comparison);
+      }
+      const predictions = (r.charts && r.charts.predictions) || [];
+      if (predictions.length && window.echarts) {
+        drawScatter(predictions);
+      }
+      const residualUrl = (r.charts && (r.charts.residual_plot_zh_url || r.charts.residual_plot_url)) || '';
+      if (residualUrl) {
+        $('residual-image').src = residualUrl;
+        $('residual-image').style.display = 'block';
+      } else {
+        $('residual-image').style.display = 'none';
+        $('residual-image').removeAttribute('src');
+      }
+      const reasons = (r.diagnostics && r.diagnostics.reasons) || [];
+      if (reasons.length) {
+        $('residual-caption').textContent = '诊断说明：' + reasons.join('；');
+        $('residual-caption').className = 'notice';
+      } else {
+        $('residual-caption').classList.add('hidden');
+      }
+      const r2Rows = (r.charts && r.charts.r2_table) || [];
+      renderR2Table(r2Rows);
+      const mathPath = r.math_model_path || '';
+      $('math-model').textContent = mathPath ? mathPath : '暂无数学文档';
+      const ts = r.training_summary || (job.result && job.result.training_summary);
+      if (ts && ts.status === 'running') {
+        $('training-summary').textContent = `稳定性训练进行中，目标训练次数：${ts.runs || '-'}，请稍候…`;
+      } else if (ts && ts.runs > 0) {
+        const s = ts.summary || {};
+        const fmt = (m) => m && m.count ? `${m.mean?.toFixed(6) ?? '-'} ± ${m.std?.toFixed(6) ?? '-'}` : '-';
+        $('training-summary').textContent = `模型: ${ts.model || '-'} · 训练次数: ${ts.runs}
+验证 R²: ${fmt(s.validation_r2)}
+验证 RMSE: ${fmt(s.validation_rmse)}
+测试 R²: ${fmt(s.test_r2)}
+测试 RMSE: ${fmt(s.test_rmse)}`;
+      } else {
+        $('training-summary').textContent = '未启用重复训练或尚未生成汇总。';
+      }
+    }
+
+    function renderR2Table(rows) {
+      const tbody = document.querySelector('#r2-table tbody');
+      if (!rows || !rows.length) {
+        tbody.innerHTML = '<tr><td colspan="5">暂无</td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows.map(row => {
+        const val = (v) => v === null || v === undefined ? '-' : Number(v).toFixed(6);
+        const best = row['测试R²'] !== null && row['测试R²'] !== undefined;
+        return `<tr style="${best ? 'color:var(--green);font-weight:600;' : ''}"><td>${row['模型'] || '-'}</td><td>${val(row['验证R²'])}</td><td>${val(row['测试R²'])}</td><td>${val(row['R²均值'])}</td><td>${val(row['R²标准差'])}</td></tr>`;
+      }).join('');
+    }
+
+    function drawR2(comparison) {
+      const el = $('chart-r2');
+      const chart = echarts.getInstanceByDom(el) || echarts.init(el);
+      chart.setOption({
+        backgroundColor: 'transparent',
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+        grid: { left: 60, right: 30, top: 50, bottom: 60 },
+        xAxis: { type: 'category', data: comparison.map(c => c.model), axisLabel: { color: '#9aa5d1' } },
+        yAxis: { type: 'value', name: '验证 R²', nameTextStyle: { color: '#9aa5d1' }, axisLabel: { color: '#9aa5d1' }, splitLine: { lineStyle: { color: 'rgba(139,157,255,.12)' } } },
+        series: [{ type: 'bar', data: comparison.map(c => c.validation_r2), itemStyle: { color: '#7c8cff', borderRadius: [8,8,0,0] } }]
+      });
+      window.addEventListener('resize', () => chart.resize());
+    }
+    function drawScatter(predictions) {
+      const el = $('chart-scatter');
+      const chart = echarts.getInstanceByDom(el) || echarts.init(el);
+      const vals = predictions.flatMap(p => [Number(p.target), Number(p.prediction)]).filter(v => Number.isFinite(v));
+      const lo = vals.length ? Math.min(...vals) : 0;
+      const hi = vals.length ? Math.max(...vals) : 1;
+      chart.setOption({
+        backgroundColor: 'transparent',
+        tooltip: { trigger: 'item' },
+        grid: { left: 60, right: 30, top: 50, bottom: 60 },
+        xAxis: { type: 'value', name: '实际值', nameTextStyle: { color: '#9aa5d1' }, axisLabel: { color: '#9aa5d1' }, splitLine: { lineStyle: { color: 'rgba(139,157,255,.12)' } } },
+        yAxis: { type: 'value', name: '预测值', nameTextStyle: { color: '#9aa5d1' }, axisLabel: { color: '#9aa5d1' }, splitLine: { lineStyle: { color: 'rgba(139,157,255,.12)' } } },
+        series: [
+          { type: 'scatter', data: predictions.map(p => [p.target, p.prediction]), symbolSize: 9, itemStyle: { color: '#22d3ee' } },
+          { type: 'line', data: [[lo, lo], [hi, hi]], symbol: 'none', lineStyle: { color: '#fb7185', type: 'dashed', width: 2 }, name: '预测值=实际值' }
+        ]
+      });
+      window.addEventListener('resize', () => chart.resize());
+    }
+
+    $('file-input').addEventListener('change', async () => {
+      const file = $('file-input').files[0];
+      if (!file) return;
+      const fd = new FormData();
+      fd.append('file', file);
+      try {
+        const data = await api('/api/data/preview', { method: 'POST', body: fd });
+        uploadId = data.upload_id;
+        $('target-select').innerHTML = data.columns.map(c => `<option value="${c}" ${c === data.suggested_target ? 'selected' : ''}>${c}</option>`).join('');
+        $('start-job').disabled = false;
+        notice('upload-notice', `已上传 ${file.name}，共 ${data.rows} 行，建议目标列: ${data.suggested_target}`, 'green');
+      } catch (e) {
+        notice('upload-notice', `上传失败: ${e.message}`, 'red');
+      }
+    });
+
+    $('start-job').addEventListener('click', async () => {
+      const target = $('target-select').value;
+      if (!target || !uploadId) return;
+      const fd = new FormData();
+      fd.append('upload_id', uploadId);
+      fd.append('target', target);
+      fd.append('models', $('models-input').value);
+      fd.append('cardinality_threshold', $('cardinality-input').value);
+      fd.append('epochs', $('epochs-input').value);
+      fd.append('stability_runs', $('stability-runs-select').value);
+      fd.append('goal', $('goal-input').value);
+      try {
+        const data = await api('/api/jobs', { method: 'POST', body: fd });
+        $('job-log').textContent = '任务已启动…';
+        openJob(data.job_id);
+      } catch (e) {
+        notice('upload-notice', `启动失败: ${e.message}`, 'red');
+      }
+    });
+
+    async function refreshFeedbackSelect() {
+      const data = await api('/api/jobs');
+      const select = $('feedback-job-select');
+      select.innerHTML = '<option value="">请选择任务</option>' + data.jobs.filter(j => ['pass','accepted','blocked'].includes(j.status)).map(j => `<option value="${j.job_id}">${j.job_id} · ${j.status} · ${j.best_model || ''}</option>`).join('');
+    }
+    $('feedback-job-select').addEventListener('change', () => {
+      $('feedback-panel').classList.toggle('hidden', !$('feedback-job-select').value);
+    });
+    document.querySelectorAll('#stars button').forEach(btn => btn.addEventListener('click', () => {
+      feedbackRating = Number(btn.dataset.v);
+      document.querySelectorAll('#stars button').forEach((b, i) => b.classList.toggle('on', i < feedbackRating));
+    }));
+
+    $('submit-feedback').addEventListener('click', async () => {
+      const jobId = $('feedback-job-select').value;
+      if (!jobId) return;
+      const body = {
+        rating: feedbackRating,
+        comment: $('feedback-comment').value,
+        rebuild: $('feedback-rebuild').checked
+      };
+      try {
+        const data = await api(`/api/jobs/${jobId}/feedback`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+        });
+        notice('feedback-result', data.rebuild_job_id ? `已提交反馈并创建重建任务: ${data.rebuild_job_id}` : '反馈已提交', 'green');
+        if (data.rebuild_job_id) { openJob(data.rebuild_job_id); }
+        refreshFeedbackSelect();
+      } catch (e) {
+        notice('feedback-result', `提交失败: ${e.message}`, 'red');
+      }
+    });
+
+    $('find-skill').addEventListener('click', async () => {
+      const query = $('find-query').value.trim();
+      if (!query) return;
+      try {
+        const data = await api('/api/skills/find', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query }) });
+        $('find-result').textContent = data.output || data.error || '无结果';
+      } catch (e) {
+        $('find-result').textContent = `搜索失败: ${e.message}`;
+      }
+    });
+
+    $('learn-skill').addEventListener('click', async () => {
+      const name = $('learn-name').value.trim();
+      const goal = $('learn-goal').value.trim();
+      if (!name) return;
+      try {
+        const data = await api('/api/skills/learn', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, goal }) });
+        $('learn-result').textContent = JSON.stringify(data, null, 2);
+        refreshSkills();
+      } catch (e) {
+        $('learn-result').textContent = `生成草稿失败: ${e.message}`;
+      }
+    });
+
+    $('approve-install').addEventListener('click', async () => {
+      const name = $('skill-action-name').value.trim();
+      if (!name) return;
+      try {
+        const data = await api('/api/skills/install', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, approved: true }) });
+        notice('skill-action-result', data.ok ? `已安装: ${name}` : `安装失败: ${data.error}`, data.ok ? 'green' : 'red');
+        refreshSkills();
+      } catch (e) {
+        notice('skill-action-result', `安装失败: ${e.message}`, 'red');
+      }
+    });
+
+    $('approve-delete').addEventListener('click', async () => {
+      const skill_id = $('skill-action-name').value.trim();
+      if (!skill_id) return;
+      try {
+        const data = await api('/api/skills/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ skill_id, approved: true }) });
+        notice('skill-action-result', data.ok ? `已删除并备份: ${skill_id}` : `删除失败: ${data.error}`, data.ok ? 'green' : 'red');
+        refreshSkills();
+      } catch (e) {
+        notice('skill-action-result', `删除失败: ${e.message}`, 'red');
+      }
+    });
+
+    $('run-review').addEventListener('click', async () => {
+      $('review-result').textContent = '评估中…';
+      try {
+        const data = await api('/api/reviews/run', { method: 'POST' });
+        $('review-result').textContent = data.stdout || data.stderr || JSON.stringify(data, null, 2);
+        renderReviewReport(data.state || {});
+      } catch (e) {
+        $('review-result').textContent = `评估失败: ${e.message}`;
+      }
+    });
+
+    $('apply-delete').addEventListener('click', async () => {
+      const skill_ids = $('review-delete-ids').value.split(',').map(s => s.trim()).filter(Boolean);
+      if (!skill_ids.length) return;
+      try {
+        const data = await api('/api/reviews/apply-delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ skill_ids, approved: true }) });
+        notice('review-delete-result', data.ok ? `已执行删除: ${skill_ids.join(', ')}` : `删除失败: ${data.error || data.stderr}`, data.ok ? 'green' : 'red');
+        refreshSkills();
+      } catch (e) {
+        notice('review-delete-result', `删除失败: ${e.message}`, 'red');
+      }
+    });
+
+    $('run-compliance').addEventListener('click', async () => {
+      $('compliance-latest').textContent = '审计中…';
+      try {
+        const data = await api('/api/compliance/run', { method: 'POST' });
+        renderCompliance(data.record || data);
+        renderRiskStatus(data.state || {});
+      } catch (e) {
+        $('compliance-latest').textContent = `审计失败: ${e.message}`;
+      }
+    });
+
+    function renderCompliance(record) {
+      const text = JSON.stringify(record, null, 2);
+      $('compliance-latest').textContent = text;
+      const el = $('compliance-card');
+      el.innerHTML = `
+        <div class="notice ${record.blocked ? 'red' : 'green'}">
+          结论: ${record.conclusion || '-'} · 风险等级: ${record.risk || '-'} · 升级处理: ${record.escalation || '-'}
+        </div>
+        <div class="tablewrap"><table><thead><tr><th>发现项</th><th>依据</th><th>必要修改</th><th>替代方案</th></tr></thead><tbody>
+          <tr><td>${(record.findings || []).join('<br>')}</td><td>${(record.basis || []).join('<br>')}</td><td>${(record.required_changes || []).join('<br>')}</td><td>${(record.alternatives || []).join('<br>')}</td></tr>
+        </tbody></table></div>`;
+    }
+
+    function renderReviewReport(state) {
+      const tbody = document.querySelector('#review-report-table tbody');
+      const skills = (state && state.skills) || {};
+      const keys = Object.keys(skills);
+      if (!keys.length) {
+        tbody.innerHTML = '<tr><td colspan="8">暂无</td></tr>';
+        return;
+      }
+      tbody.innerHTML = keys.map(id => {
+        const s = skills[id] || {};
+        const isInitial = ['find-skills','math-modeling','sunny','project-compliance','skill-review','tabular-modeling','model-diagnostics','model-pattern-miner','skill-learner'].includes(id);
+        const status = isInitial ? '初始技能' : (s.pinned ? '已置顶' : '可评估');
+        const suggestion = isInitial ? '保留' : (s.last_importance < 0.2 && s.last_ablation < 0.25 ? '删除候选' : '保留');
+        return `<tr style="${suggestion === '删除候选' ? 'color:var(--amber);' : ''}"><td>${id}</td><td>${Number(s.last_importance || 0).toFixed(4)}</td><td>${Number(s.last_ablation || 0).toFixed(4)}</td><td>${Number(s.cumulative_weight || 0).toFixed(4)}</td><td>${Number(s.normalized_weight || 0).toFixed(4)}</td><td>${status}</td><td>${s.pinned ? '是' : '否'}</td><td>${suggestion}</td></tr>`;
+      }).join('');
+      renderDeletionCandidates(skills, keys);
+    }
+
+    function renderDeletionCandidates(skills, keys) {
+      const box = $('deletion-candidates');
+      const initial = new Set(['find-skills','math-modeling','sunny','project-compliance','skill-review','tabular-modeling','model-diagnostics','model-pattern-miner','skill-learner']);
+      const candidates = keys.filter(id => !initial.has(id) && !skills[id].pinned && skills[id].last_importance < 0.2 && skills[id].last_ablation < 0.25);
+      if (!candidates.length) {
+        box.textContent = '无推荐';
+        box.className = 'notice';
+        return;
+      }
+      box.innerHTML = '推荐删除项目：' + candidates.map(id => `${id}（重要性 ${Number(skills[id].last_importance || 0).toFixed(4)}）`).join('；');
+      box.className = 'notice';
+    }
+
+    async function refreshRecommendations(force = false) {
+      const url = force ? '/api/skills/recommendations?refresh=true' : '/api/skills/recommendations';
+      const data = await api(url);
+      const box = $('skill-recommendations');
+      const recs = data.recommendations || [];
+      if (!recs.length) { box.textContent = '暂无推荐'; return; }
+      box.innerHTML = recs.map(r => `<div class="skill-item"><h4>${r.title || r.id}</h4><p>${r.reason || ''}</p><p>已批准用户: ${r.approval_count || 0} / 10</p><button class="btn secondary" data-rec="${r.id}">批准学习</button></div>`).join('');
+      box.querySelectorAll('button[data-rec]').forEach(btn => btn.addEventListener('click', async () => {
+        try {
+          const res = await api(`/api/skills/recommendations/${btn.dataset.rec}/approve`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ client_id: CLIENT_ID }) });
+          await refreshRecommendations(false);
+          if (res.triggered) notice('skill-action-result', '批准数已达10，已触发全网页迭代升级', 'green');
+        } catch (e) {
+          notice('skill-action-result', `批准失败: ${e.message}`, 'red');
+        }
+      }));
+    }
+
+    async function loadLatestJob() {
+      try {
+        const data = await api('/api/jobs/latest');
+        if (data.job) openJob(data.job.job_id);
+      } catch (e) { console.error(e); }
+    }
+
+    async function refreshComplianceStatus() {
+      try {
+        const data = await api('/api/compliance/status');
+        renderRiskStatus(data.state || {}, data.alert || {});
+      } catch (e) { console.error(e); }
+    }
+
+    function renderRiskStatus(state, alert) {
+      const banner = $('risk-banner');
+      if (!state) return;
+      if (state.highest) {
+        banner.textContent = '⚠️ 风险等级已达到最高，系统即将终止运行。';
+        banner.className = 'notice red';
+      } else if (state.increased || (alert && alert.message)) {
+        const findings = (alert && alert.findings && alert.findings.length) ? '；原因：' + alert.findings.join('、') : '';
+        banner.textContent = `⚠️ 风险等级升高：${state.current_risk || '-'}。${(alert && alert.message) || ''}${findings}`;
+        banner.className = 'notice red';
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    async function loadLatest() {
+      await refreshHealth();
+      await refreshJobs();
+      await refreshSkills();
+      await refreshFeedbackSelect();
+      await refreshRecommendations(false);
+      await refreshComplianceStatus();
+      try {
+        const r = await api('/api/reviews/latest');
+        renderReviewReport(r.state || {});
+      } catch (e) { console.error(e); }
+      try {
+        const c = await api('/api/compliance/latest');
+        if (c.latest) renderCompliance(c.latest);
+        $('compliance-latest').textContent = JSON.stringify(c, null, 2);
+      } catch (e) { console.error(e); }
+      await loadLatestJob();
+      setInterval(refreshComplianceStatus, 10000);
+    }
+
+    $('refresh-recommendations').addEventListener('click', async () => {
+      try { await refreshRecommendations(true); } catch (e) { notice('skill-action-result', `刷新失败: ${e.message}`, 'red'); }
+    });
+
+    loadLatest();
+  </script>
+</body>
+</html>

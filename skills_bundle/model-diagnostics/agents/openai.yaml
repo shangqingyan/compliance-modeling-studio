@@ -1,0 +1,4 @@
+interface:
+  display_name: "模型诊断与返工"
+  short_description: "在模型评估阶段检测R2与残差异常，定位数据处理问题并自动重新建模。"
+  default_prompt: "使用 $model-diagnostics 诊断当前回归模型的R2/RMSE/MAE与残差分布，发现异常后返回数据处理阶段修正编码与目标变换，并重新建模。"

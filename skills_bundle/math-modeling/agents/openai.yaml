@@ -1,0 +1,4 @@
+interface:
+  display_name: "Math Modeling"
+  short_description: "Build and document mathematical models from any goal"
+  default_prompt: "Use $math-modeling to build and document a mathematical model for: [describe the problem]."

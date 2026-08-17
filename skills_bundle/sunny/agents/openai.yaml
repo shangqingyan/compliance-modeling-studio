@@ -1,0 +1,6 @@
+interface:
+  display_name: "Sunny"
+  short_description: "Legal and human-values compliance supervisor"
+  default_prompt: "Use $sunny to review the following skill or task for legal compliance and human-values alignment:"
+policy:
+  allow_implicit_invocation: true

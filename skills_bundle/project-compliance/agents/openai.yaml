@@ -1,0 +1,6 @@
+interface:
+  display_name: "项目合规监督"
+  short_description: "Enforce legal and human-values compliance"
+  default_prompt: "Use $project-compliance to review the current project files for legal compliance and human-values alignment."
+policy:
+  allow_implicit_invocation: true

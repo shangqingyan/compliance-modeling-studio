@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tabular Modeling"
+  short_description: "Build and evaluate regression models on tabular data"
+  default_prompt: "Use $tabular-modeling to analyze, preprocess, and model tabular data with a 60/20/20 train/validation/test split."

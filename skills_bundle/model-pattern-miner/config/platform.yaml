@@ -1,0 +1,42 @@
+platform:
+  name: generic-online-modeling-platform
+  description: Replace with the real platform name after user authorization.
+
+source:
+  type: file            # file | api
+  format: auto          # auto | csv | json | api
+  endpoint: ""          # required when type is api
+  token_env: MODEL_PATTERN_API_TOKEN
+  rate_limit_per_second: 1
+  timeout_seconds: 30
+
+field_map:
+  id: id
+  source_id: source_id
+  name: name
+  platform: platform
+  objective: objective
+  target_variable: target_variable
+  dataset: dataset
+  features: features
+  algorithm: algorithm
+  hyperparameters: hyperparameters
+  sample_size: sample_size
+  split: split
+  metrics: metrics
+  stability: stability
+  created_at: created_at
+  artifacts: artifacts
+  tags: tags
+  notes: notes
+
+metric_map:
+  train_r2: train_r2
+  train_rmse: train_rmse
+  train_mae: train_mae
+  test_r2: test_r2
+  test_rmse: test_rmse
+  test_mae: test_mae
+  cv_r2_mean: cv_r2_mean
+  cv_r2_std: cv_r2_std
+  overfit_gap: overfit_gap

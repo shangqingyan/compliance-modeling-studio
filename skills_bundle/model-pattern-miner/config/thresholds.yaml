@@ -1,0 +1,18 @@
+excellent:
+  test_r2:
+    min: 0.90
+  test_rmse:
+    max: null
+  test_mae:
+    max: null
+  min_sample_size: null
+  max_overfit_gap: null
+  cv_r2_min: null
+  cv_r2_std_max: null
+
+pattern_mining:
+  min_support: 2
+  min_confidence: 0.5
+
+recommendation:
+  top_k: 5
